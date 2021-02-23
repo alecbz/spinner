@@ -34,7 +34,6 @@ func main() {
 	)
 
 	display := func() {
-		// fmt.Printf("printing %q\n", line)
 		fmt.Printf("\r%-[2]*[1]s\r", "", longest) // clear the line
 		n, _ := fmt.Printf("%s %s", spinner[spinnerPos], line)
 		if n > longest {
