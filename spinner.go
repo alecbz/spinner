@@ -40,7 +40,6 @@ func main() {
 		spinnerPos = 0
 		line       = *initialMessage
 		longest    = len(line)
-		ok         bool
 	)
 
 	display := func() {
@@ -57,10 +56,11 @@ L:
 		case <-time.Tick(50 * time.Millisecond):
 			spinnerPos = (spinnerPos + 1) % len(spinner)
 			display()
-		case line, ok = <-ch:
+		case l, ok := <-ch:
 			if !ok {
 				break L
 			}
+			line = l
 			display()
 		}
 	}
@@ -68,6 +68,6 @@ L:
 	fmt.Printf("\r%-[2]*[1]s\r", "", longest) // clear the line
 
 	if *finalEcho {
-		fmt.Printf("  %s", line)
+		fmt.Printf("  %s\n", line)
 	}
 }
