@@ -6,19 +6,29 @@ import (
 	"log"
 	"os"
 	"time"
+
+	flag "github.com/spf13/pflag"
 )
 
 var (
 	spinner = []string{`⠋`, `⠙`, `⠹`, `⠸`, `⠼`, `⠴`, `⠦`, `⠧`, `⠇`, `⠏`}
+
+	echo           *bool   = flag.BoolP("echo", "e", false, "echo lines read from stdin")
+	finalEcho      *bool   = flag.Bool("final-echo", false, "don't clear the last line displayed before exiting")
+	initialMessage *string = flag.StringP("message", "m", "", "initial text to display")
 )
 
 func main() {
+	flag.Parse()
+
 	scanner := bufio.NewScanner(os.Stdin)
 	ch := make(chan string, 10)
 
 	go func() {
 		for scanner.Scan() {
-			ch <- scanner.Text()
+			if *echo {
+				ch <- scanner.Text()
+			}
 		}
 		if scanner.Err() != nil {
 			log.Fatal(scanner.Err())
@@ -28,8 +38,8 @@ func main() {
 
 	var (
 		spinnerPos = 0
-		line       = ""
-		longest    = 0
+		line       = *initialMessage
+		longest    = len(line)
 		ok         bool
 	)
 
@@ -55,5 +65,9 @@ L:
 		}
 	}
 
-	fmt.Printf("\r  %s\n", line)
+	fmt.Printf("\r%-[2]*[1]s\r", "", longest) // clear the line
+
+	if *finalEcho {
+		fmt.Printf("  %s", line)
+	}
 }
