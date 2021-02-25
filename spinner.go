@@ -39,11 +39,15 @@ func main() {
 	var (
 		spinnerPos = 0
 		line       = *initialMessage
-		longest    = len(line)
+		longest    = 0
 	)
 
+	clear := func() {
+		fmt.Printf("\r%-[2]*[1]s\r", "", longest)
+	}
+
 	display := func() {
-		fmt.Printf("\r%-[2]*[1]s\r", "", longest) // clear the line
+		clear()
 		n, _ := fmt.Printf("%s %s", spinner[spinnerPos], line)
 		if n > longest {
 			longest = n
@@ -65,7 +69,7 @@ L:
 		}
 	}
 
-	fmt.Printf("\r%-[2]*[1]s\r", "", longest) // clear the line
+	clear()
 
 	if *finalEcho {
 		fmt.Printf("  %s\n", line)
