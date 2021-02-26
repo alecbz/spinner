@@ -10,9 +10,34 @@ import (
 	flag "github.com/spf13/pflag"
 )
 
-var (
-	spinner = []string{`⠋`, `⠙`, `⠹`, `⠸`, `⠼`, `⠴`, `⠦`, `⠧`, `⠇`, `⠏`}
+type spinner struct {
+	s    []string
+	freq time.Duration
+	pos  int
+}
 
+func (s *spinner) next() {
+	s.pos = (s.pos + 1) % len(s.s)
+}
+
+func (s spinner) curr() string {
+	return s.s[s.pos]
+}
+
+func spin(freq time.Duration, parts ...string) spinner {
+	return spinner{
+		s:    parts,
+		freq: freq,
+		pos:  0,
+	}
+}
+
+var (
+	asciiSpinner   = spin(100*time.Millisecond, `|`, `/`, `-`, `\`)
+	unicodeSpinner = spin(50*time.Millisecond, `⠋`, `⠙`, `⠹`, `⠸`, `⠼`, `⠴`, `⠦`, `⠧`, `⠇`, `⠏`)
+)
+
+var (
 	echo           *bool   = flag.BoolP("echo", "e", false, "echo lines read from stdin")
 	finalEcho      *bool   = flag.Bool("final-echo", false, "don't clear the last line displayed before exiting")
 	initialMessage *string = flag.StringP("message", "m", "", "initial text to display")
@@ -37,28 +62,25 @@ func main() {
 	}()
 
 	var (
-		spinnerPos = 0
-		line       = *initialMessage
-		longest    = 0
+		s    = unicodeSpinner
+		line = *initialMessage
+		n    = 0
 	)
 
 	clear := func() {
-		fmt.Printf("\r%-[2]*[1]s\r", "", longest)
+		fmt.Printf("\r%-[2]*[1]s\r", "", n)
 	}
 
 	display := func() {
 		clear()
-		n, _ := fmt.Printf("%s %s", spinner[spinnerPos], line)
-		if n > longest {
-			longest = n
-		}
+		n, _ = fmt.Printf("%s %s", s.curr(), line)
 	}
 
 L:
 	for {
 		select {
-		case <-time.Tick(50 * time.Millisecond):
-			spinnerPos = (spinnerPos + 1) % len(spinner)
+		case <-time.Tick(s.freq):
+			s.next()
 			display()
 		case l, ok := <-ch:
 			if !ok {
